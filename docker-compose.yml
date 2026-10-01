@@ -1,0 +1,14 @@
+services:
+  mqtt-log-collector:
+    build:
+      context: ./collector
+    container_name: mqtt-log-collector
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
+    env_file:
+      - .env
+    environment:
+      LOG_ROOT: /logs
+      TIMEZONE: America/Sao_Paulo
+    volumes:
+      - ./logs:/logs
+    restart: unless-stopped

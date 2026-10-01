@@ -1,0 +1,6 @@
+.env
+secrets.h
+logs/*
+!logs/.gitkeep
+__pycache__/
+*.py[cod]
