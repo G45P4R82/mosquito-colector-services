@@ -4,13 +4,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends tzdata \
+    && apt-get install -y --no-install-recommends gosu tzdata \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY main.py .
+COPY entrypoint.sh /usr/local/bin/collector-entrypoint
+RUN chmod 755 /usr/local/bin/collector-entrypoint
 RUN mkdir -p /logs
 
-CMD ["python", "main.py"]
+ENTRYPOINT ["/usr/local/bin/collector-entrypoint"]
+CMD ["main.py"]

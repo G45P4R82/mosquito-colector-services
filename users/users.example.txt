@@ -1,0 +1,5 @@
+# One MQTT user per line: username:password
+# The real users.txt is local-only and must not be committed.
+iot-sensor-001:replace-me
+iot-sensor-002:replace-me
+iot-sensor-003:replace-me

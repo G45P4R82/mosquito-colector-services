@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import queue
+import sys
 import tempfile
 import threading
 from datetime import datetime
@@ -15,16 +16,30 @@ LOG_ROOT = Path(os.getenv("LOG_ROOT", "/logs"))
 MQTT_HOST = os.environ["MQTT_HOST"]
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 TIMEZONE = ZoneInfo(os.getenv("TIMEZONE", "America/Sao_Paulo"))
+USERS_FILE = Path(os.getenv("USERS_FILE", "/users/users.txt"))
 MESSAGE_QUEUE: queue.Queue[tuple[str, mqtt.MQTTMessage]] = queue.Queue()
 
 
 def devices_from_environment() -> list[dict[str, str]]:
-    devices = json.loads(os.environ["MQTT_DEVICES_JSON"])
-    if not isinstance(devices, list) or not devices:
-        raise ValueError("MQTT_DEVICES_JSON deve ser uma lista nao vazia")
-    for device in devices:
-        if not all(key in device for key in ("username", "password", "topic")):
-            raise ValueError("cada dispositivo precisa de username, password e topic")
+    if not USERS_FILE.is_file():
+        raise ValueError(f"arquivo de usuarios nao encontrado: {USERS_FILE}")
+
+    devices = []
+    usernames = set()
+    for line_number, raw_line in enumerate(USERS_FILE.read_text(encoding="utf-8").splitlines(), 1):
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.count(":") != 1:
+            raise ValueError(f"linha {line_number} invalida em {USERS_FILE}")
+        username, password = (part.strip() for part in line.split(":", 1))
+        if not username or not password or username in usernames:
+            raise ValueError(f"linha {line_number} invalida ou usuario duplicado")
+        usernames.add(username)
+        devices.append({"username": username, "password": password, "topic": f"sensores/{username}/#"})
+
+    if not devices:
+        raise ValueError(f"nenhum usuario encontrado em {USERS_FILE}")
     return devices
 
 
@@ -145,4 +160,8 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    if "--validate-users" in sys.argv:
+        for device in devices_from_environment():
+            print(f"OK {device['username']} -> {device['topic']}")
+    else:
+        main()

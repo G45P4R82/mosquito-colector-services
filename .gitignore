@@ -1,5 +1,6 @@
 .env
 secrets.h
+users/users.txt
 logs/*
 !logs/.gitkeep
 __pycache__/

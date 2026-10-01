@@ -3,12 +3,13 @@ services:
     build:
       context: ./collector
     container_name: mqtt-log-collector
-    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
     env_file:
       - .env
     environment:
       LOG_ROOT: /logs
+      USERS_FILE: /users/users.txt
       TIMEZONE: America/Sao_Paulo
     volumes:
       - ./logs:/logs
+      - ./users:/users:ro
     restart: unless-stopped
